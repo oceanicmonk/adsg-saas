@@ -148,12 +148,12 @@ def compute_sfd(ssg, root):
 
 # Streamlit Interface
 st.set_page_config(page_title="ADSG Visualization Tool", layout="wide", initial_sidebar_state="collapsed")
-st.title("ADSG Visualization Tool :chart_with_upwards_trend:")
+st.title("ADSG Visualization Tool 📈")
 st.markdown("""
     **Welcome to the ADSG Visualization Tool!**  
     This application generates Symbolic Shape Graphs (SSG) from two numbers using GCD and LCM operations.  
-    - Free users get 100 trials/month with 2D visualizations.  
-    - Premium users ($5/month or ₹420/month) unlock 3D visualizations and detailed reports.  
+    - Free users get 100 trials/month with 2D, 3D visualizations, and reports.  
+    - Premium users ($5/month or ₹420/month) get unlimited trials with enhanced features.  
     Try it now with the inputs below!
 """, unsafe_allow_html=False)
 
@@ -161,14 +161,15 @@ number1 = st.number_input("First Number", value=7, step=1, min_value=1)
 number2 = st.number_input("Second Number", value=20058, step=1, min_value=1)
 
 trial_count = track_trial()
-st.write(f"Trials this month: {trial_count}/100")
+st.session_state["trial_count"] = trial_count  # Store trial count in session
+st.write(f"Trials this month: {st.session_state['trial_count']}/100")
 
 # Razorpay Integration
 if trial_count > 100:
     st.error("You've reached your free trial limit of 100 this month.")
     if "razorpay_client" not in st.session_state:
         # Replace with your live Razorpay API keys from dashboard.razorpay.com
-        st.session_state["razorpay_client"] = razorpay.Client(auth=("your_key_id", "your_key_secret"))
+        st.session_state["razorpay_client"] = razorpay.Client(auth=("rzp_test_123456789", "rzp_test_abcdef123456"))  # Use test keys
     user_email = st.session_state.get("user_email", st.text_input("Enter Your Email for Premium Access", value=""))
     if user_email:
         st.session_state["user_email"] = user_email
@@ -185,7 +186,7 @@ if trial_count > 100:
                 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
                 <script>
                 var options = {{
-                    "key": "your_key_id",  // Replace with your live key
+                    "key": "rzp_test_123456789",  // Replace with your test key
                     "amount": "42000",
                     "currency": "INR",
                     "name": "ADSG Visualization Tool",
@@ -205,12 +206,25 @@ if trial_count > 100:
         except Exception as e:
             st.error(f"Payment setup failed: {e}. Please ensure Razorpay keys are correct.")
 
-if st.experimental_get_query_params().get("payment_id"):
-    payment_id = st.experimental_get_query_params()["payment_id"][0]
+if st.query_params.get("payment_id"):
+    payment_id = st.query_params["payment_id"][0]
     st.session_state["razorpay_payment_id"] = payment_id
-    st.session_state["user_email"] = st.session_state.get("user_email", "anonymous")  # Store email if provided
+    st.session_state["user_email"] = st.session_state.get("user_email", "anonymous")
+    # Update usage.log for the user
+    current_month = datetime.now().strftime("%Y-%m")
+    log_file = "usage.log"
+    user_key = f"{current_month}:{st.session_state.get('user_email', payment_id)}"
+    if os.path.exists(log_file):
+        with open(log_file, "r") as f:
+            lines = f.readlines()
+        with open(log_file, "w") as f:
+            for line in lines:
+                if user_key in line:
+                    f.write(f"{user_key}:0\n")
+                else:
+                    f.write(line)
+    st.session_state["trial_count"] = 0  # Reset trial count
     st.success(f"Payment successful! Premium access unlocked with Payment ID: {payment_id}")
-    trial_count = 0  # Reset trial count for premium users
 
 if st.button("Generate"):
     ops = ["GCD", "LCM"]
@@ -245,9 +259,9 @@ if st.button("Generate"):
         edge_labels = {(u, v): "GCD" if v == gcd_result else "LCM" for u, v in edges}
         nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_size=8)
         st.pyplot(plt)
-        # Premium Features
-        if trial_count <= 100 or st.session_state.get("razorpay_payment_id"):
-            st.success("Premium Access: Unlocked 3D Visualization and Report!")
+        # Enhanced Features (Free within 100 trials or Premium)
+        if st.session_state.get("trial_count", trial_count) <= 100 or st.session_state.get("razorpay_payment_id"):
+            st.success("Enhanced Access: 3D Visualization and Report available!")
             st.markdown("<h3 style='color: #4CAF50;'>3D Visualization</h3>", unsafe_allow_html=True)
             pos_3d = nx.spring_layout(G, dim=3, seed=42)
             x = [pos_3d[v][0] for v in vertices]
@@ -270,6 +284,6 @@ if st.button("Generate"):
                 key="download_button"
             )
         else:
-            st.info("Premium features require a subscription. Click 'Upgrade to Premium' to proceed.")
+            st.info("Enhanced features require a premium subscription after 100 trials. Click 'Upgrade to Premium' to proceed.")
     else:
         st.error("Error generating SSC. Check inputs or operations.")
