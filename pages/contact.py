@@ -25,7 +25,7 @@ st.markdown("""
     <h1>Contact Us</h1>
     <p>For any questions or support regarding the ADSG Visualization Tool, please reach out to us:</p>
     <p><strong>Email</strong>: <a href="mailto:oceanicmonk@gmail.com">oceanicmonk@gmail.com</a></p>
-    <p><strong>Address</strong>: Amblaparambil, Kerala-676509, India</p>
+    <p><strong>Address</strong>: Ambalaparambil, Kerala-676509, India</p>
     <p><strong>Business Name</strong>: Serene Glade</p>
     </div>
 """, unsafe_allow_html=True)
