@@ -65,6 +65,8 @@ def track_trial():
             with open(log_file, "r") as f:
                 logs = f.readlines()
             user_key = f"{current_month}:{user_id}"
+            # Clean old logs (optional: remove entries from previous months)
+            logs = [line for line in logs if current_month in line]
             for i, line in enumerate(logs):
                 if user_key in line:
                     count = int(line.split(":")[-1].strip()) + 1
@@ -224,6 +226,7 @@ if "razorpay_client" not in st.session_state:
 
 # Payment form
 with st.form(key="payment_form"):
+    st.info("Unlock Unlimited Trials & Reports for Just $5/₹420 Monthly!")
     st.markdown("**Want unlimited access?** Upgrade to Premium ($5/month or ₹420/month) for unlimited trials and enhanced features!", unsafe_allow_html=True)
     user_email = st.text_input("Enter Your Email for Premium Access", value=st.session_state.get("user_email", ""), key="email_input")
     submitted = st.form_submit_button("Upgrade to Premium ($5/month or ₹420/month)", type="secondary")
@@ -263,7 +266,7 @@ if submitted:
             """, height=400)
             st.session_state["user_email"] = user_email
         except Exception as e:
-            st.error(f"Payment setup failed: {e}. Please ensure a stable internet connection or try again.")
+            st.error(f"Payment setup pending Razorpay key activation. Try again later or contact support. Error: {e}")
 
 # Check trial limit before generation
 if trial_count > 50 and not st.session_state.get("razorpay_payment_id"):
