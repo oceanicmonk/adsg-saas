@@ -194,7 +194,7 @@ st.title("ADSG Visualization Tool 📈")
 st.markdown("""
     **Welcome to the ADSG Visualization Tool!**  
     This application generates Symbolic Shape Graphs (SSG) from two numbers using GCD and LCM operations.  
-    - Free users get 100 trials/month with 2D visualizations.  
+    - Free users get 100 trials/month with 2D and 3D visualizations.  
     - Premium users ($5/month or ₹420/month) get unlimited trials with 3D visualizations and reports.  
     Try it now with the inputs below!
 """, unsafe_allow_html=True)
@@ -226,7 +226,7 @@ with st.form(key="payment_form"):
     user_email = st.text_input("Enter Your Email for Premium Access", value=st.session_state["user_email"], key="email_input")
     if user_email:
         st.session_state["user_email"] = user_email
-    upgrade_button = st.form_submit_button("Upgrade to Premium ($5/month or ₹420/month)", disabled=False)  # Always enabled
+    upgrade_button = st.form_submit_button("Upgrade to Premium ($5/month or ₹420/month)", disabled=False)
 
 if upgrade_button:
     if not user_email:
@@ -309,6 +309,7 @@ else:
         st.write(f"Graph Dispersion Index (GDI): {results['gdi']:.3f}")
         st.write(f"Symbolic Fractal Dimension (SFD): {results['sfd']:.3f}")
         # 2D Visualization
+        st.markdown("<h3 style='color: #4CAF50;'>2D Visualization</h3>", unsafe_allow_html=True)
         G = nx.Graph()
         G.add_nodes_from(results["vertices"])
         G.add_edges_from(results["edges"])
@@ -319,7 +320,7 @@ else:
         nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_size=8)
         st.pyplot(plt)
         plt.close()  # Close figure to prevent memory leak
-        # Enhanced Features
+        # 3D Visualization (available for trial_count <= 100 or premium)
         if trial_count <= 100 or st.session_state.get("razorpay_payment_id"):
             st.success("Enhanced Access: 3D Visualization and Report available!")
             st.markdown("<h3 style='color: #4CAF50;'>3D Visualization</h3>", unsafe_allow_html=True)
@@ -353,7 +354,7 @@ else:
                 key="download_button"
             )
         else:
-            st.info("Enhanced features require a premium subscription after 100 trials. Click 'Upgrade to Premium' to proceed.")
+            st.info("3D Visualization and Report require a premium subscription after 100 trials. Click 'Upgrade to Premium' to proceed.")
 
 # Handle payment success
 if st.query_params.get("payment_id"):
