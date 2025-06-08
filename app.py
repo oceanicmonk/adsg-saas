@@ -13,7 +13,7 @@ import razorpay
 # Set page configuration
 st.set_page_config(page_title="ADSG Visualization Tool", layout="wide", initial_sidebar_state="collapsed")
 
-# Custom CSS for vibrant buttons and shortened number input bars
+# Custom CSS for vibrant buttons and wider input bars
 st.markdown("""
     <style>
     /* Generate button: Vibrant lime green */
@@ -28,29 +28,29 @@ st.markdown("""
         background-color: #00e66b;
     }
     /* Upgrade to Premium button: Vibrant royal blue */
-    div.stButton > button[kind="secondary"] {
+    div.stButton > button[key="upgrade_button"] {
         background-color: #1e90ff;
         color: white;
         border-radius: 5px;
         padding: 10px 20px;
         font-weight: bold;
     }
-    div.stButton > button[kind="secondary"]:hover {
+    div.stButton > button[key="upgrade_button"]:hover {
         background-color: #1a7de6;
     }
     /* Other buttons (Download Report): Gray */
-    div.stButton > button:not([kind="primary"]):not([kind="secondary"]) {
+    div.stButton > button:not([kind="primary"]):not([key="upgrade_button"]) {
         background-color: #6c757d;
         color: white;
         border-radius: 5px;
         padding: 10px 20px;
     }
-    div.stButton > button:not([kind="primary"]):not([kind="secondary"]):hover {
+    div.stButton > button:not([kind="primary"]):not([key="upgrade_button"]):hover {
         background-color: #5a6268;
     }
-    /* Shorten number input bars */
-    .stNumberInput input {
-        width: 15rem !important;
+    /* Widen input bars */
+    .stTextInput input {
+        width: 20rem !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -203,9 +203,20 @@ st.markdown("""
     Try it now with the inputs below!
 """, unsafe_allow_html=True)
 
-# Input fields
-number1 = st.number_input("First Number", value=7, min_value=1, step=1)
-number2 = st.number_input("Second Number", value=20058, min_value=1, step=1)
+# Input fields with text_input to handle large numbers
+number1_str = st.text_input("First Number", value="7")
+number2_str = st.text_input("Second Number", value="20058")
+
+# Validate inputs
+try:
+    number1 = int(number1_str)
+    number2 = int(number2_str)
+    if number1 <= 0 or number2 <= 0:
+        st.error("Please enter positive integers greater than 0.")
+        number1, number2 = None, None
+except ValueError:
+    st.error("Please enter valid integers.")
+    number1, number2 = None, None
 
 # Trial tracking
 trial_count = track_trial()
@@ -215,8 +226,6 @@ st.write(f"Trials this month: {trial_count}/50")
 # Initialize session state
 if "results" not in st.session_state:
     st.session_state["results"] = None
-if "user_email" not in st.session_state:
-    st.session_state["user_email"] = ""
 
 # Razorpay Integration
 if "razorpay_client" not in st.session_state:
@@ -227,14 +236,17 @@ if "razorpay_client" not in st.session_state:
 # Payment form
 with st.form(key="payment_form"):
     st.markdown("**Want unlimited access?** Upgrade to Premium ($5/month or ₹420/month) for unlimited trials and enhanced features!", unsafe_allow_html=True)
+    if "user_email" not in st.session_state:
+        st.session_state["user_email"] = ""
     user_email = st.text_input("Enter Your Email for Premium Access", value=st.session_state["user_email"], key="email_input")
-    submitted = st.form_submit_button("Upgrade to Premium ($5/month or ₹420/month)", type="secondary")
+    if user_email:
+        st.session_state["user_email"] = user_email
+    upgrade_button = st.form_submit_button("Upgrade to Premium ($5/month or ₹420/month)", disabled=False, key="upgrade_button")
 
-if submitted:
+if upgrade_button:
     if not user_email:
         st.error("Please enter a valid email to proceed with payment.")
     else:
-        st.session_state["user_email"] = user_email
         try:
             order = st.session_state["razorpay_client"].order.create({
                 "amount": 42000,  # ₹420 in paise
@@ -270,6 +282,8 @@ if submitted:
 # Check trial limit before generation
 if trial_count > 50 and not st.session_state.get("razorpay_payment_id"):
     st.error("You've reached your free trial limit of 50 this month. Upgrade to Premium to continue.")
+elif number1 is None or number2 is None:
+    st.warning("Please correct the input errors before generating.")
 else:
     # SSC Generation and Visualization
     if st.button("Generate", key="generate_button", type="primary"):
@@ -355,7 +369,8 @@ else:
                 label="Download Report",
                 data=report,
                 file_name=f"adsg_report_{number1}_{number2}.txt",
-                mime="text/plain"
+                mime="text/plain",
+                key="download_button"
             )
         else:
             st.info("3D Visualization and Report require a premium subscription after 50 trials. Click 'Upgrade to Premium' to proceed.")
