@@ -65,7 +65,7 @@ def track_trial():
             with open(log_file, "r") as f:
                 logs = f.readlines()
             user_key = f"{current_month}:{user_id}"
-            # Clean old logs (optional: remove entries from previous months)
+            # Clean old logs (remove entries from previous months)
             logs = [line for line in logs if current_month in line]
             for i, line in enumerate(logs):
                 if user_key in line:
@@ -201,7 +201,7 @@ st.markdown("""
     **Welcome to the ADSG Visualization Tool!**  
     This application generates Symbolic Shape Graphs (SSG) from two numbers using GCD and LCM operations.  
     - Free users get 50 trials/month with 2D and 3D visualizations.  
-    - Premium users ($5/month ) get unlimited trials with 3D visualizations and reports.  
+    - Upgrade to Premium ($5/month) for unlimited trials and reports.  
     Try it now with the inputs below!
 """, unsafe_allow_html=True)
 
@@ -226,8 +226,7 @@ if "razorpay_client" not in st.session_state:
 
 # Payment form
 with st.form(key="payment_form"):
-    st.info("Unlock Unlimited Trials & Reports for Just $5 Monthly!")
-    st.markdown("**Want unlimited access?** Upgrade to Premium ($5/month) for unlimited trials and enhanced features!", unsafe_allow_html=True)
+    st.markdown("Get Premium for unlimited trials and reports ($5/month).", unsafe_allow_html=True)
     user_email = st.text_input("Enter Your Email for Premium Access", value=st.session_state.get("user_email", ""), key="email_input")
     submitted = st.form_submit_button("Upgrade to Premium ($5/month)", type="secondary")
 
@@ -337,7 +336,7 @@ else:
                              marker=dict(size=12, color='#2196F3', opacity=0.8))
             ])
             fig.update_layout(
-                title="3D SSG Visualization",
+                title="GCD Graph Visualization",
                 scene=dict(xaxis_title='X', yaxis_title='Y', zaxis_title='Z'),
                 paper_bgcolor='rgba(0,0,0,0)',
                 plot_bgcolor='rgba(0,0,0,0)',
@@ -345,7 +344,7 @@ else:
             )
             st.plotly_chart(fig, use_container_width=True)
             if trial_count <= 50 and not st.session_state.get("razorpay_payment_id"):
-                st.info("Love 3D visualizations? Upgrade to Premium for unlimited trials and downloadable reports!")
+                st.info("Love 3D visualizations? Upgrade to Premium for unlimited trials and downloadable reports.")
             st.markdown("<h3 style='color: #4CAF50;'>Download Report</h3>", unsafe_allow_html=True)
             report = (f"ADSG Visualization Tool Report\n\nInputs: {number1}, {number2}\n"
                       f"SSC Result: {results['ssc_result']}\n\nMetrics:\n"
@@ -360,7 +359,7 @@ else:
                 key="download_button"
             )
         else:
-            st.info("3D Visualization and Report require a premium subscription after 50 trials. Click 'Upgrade to Premium' to proceed.")
+            st.info("3D visualizations and reports require a Premium subscription ($5/month) after 50 trials.")
 
 # Handle payment success
 if st.query_params.get("payment_id"):
