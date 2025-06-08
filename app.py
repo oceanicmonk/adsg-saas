@@ -17,15 +17,16 @@ st.set_page_config(page_title="ADSG Visualization Tool", layout="wide", initial_
 # Currency converter
 def get_inr_amount(usd_amount):
     try:
-        api_key = os.environ.get("EXCHANGE_RATE_API_KEY", "your_exchangerate_api_key")  # Replace with your key
+        api_key = os.environ.get("EXCHANGE_RATE_API_KEY", "d959e6b77929ec489dd71252")  # Fallback for local testing
         response = requests.get(f"https://api.exchangerate-api.com/v4/latest/USD?apiKey={api_key}")
         rate = response.json()["rates"]["INR"]
         return round(usd_amount * rate)
     except:
-        return 420  # Fallback to ₹420 if API fails
+        return 420  # Fallback to ₹420
 
 usd_price = 5
 inr_price = get_inr_amount(usd_price)
+st.session_state['inr_price'] = inr_price  # Store for policy pages
 
 # Custom CSS
 st.markdown("""
@@ -77,6 +78,12 @@ st.markdown("""
     }
     .footer a:hover {
         text-decoration: underline;
+    }
+    .payment-form {
+        background-color: #f8f9fa;
+        padding: 1rem;
+        border-radius: 5px;
+        margin: 1rem 0;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -222,11 +229,11 @@ def compute_sfd(ssg, root):
 
 # Streamlit Interface
 st.title("ADSG Visualization Tool 📈")
-st.markdown(f"""
+st.markdown("""
     **Welcome to the ADSG Visualization Tool!**  
     This application generates Symbolic Shape Graphs (SSG) from two numbers using GCD and LCM operations.  
     - Free users get 50 trials/month with 2D and 3D visualizations.  
-    - Upgrade to Premium ($5/month ≈ ₹{inr_price}/month) for unlimited trials and reports.  
+    - Upgrade to Premium for unlimited trials and reports.  
     Try it now with the inputs below!
 """, unsafe_allow_html=True)
 
@@ -251,7 +258,7 @@ if "razorpay_client" not in st.session_state:
 
 # Payment form
 with st.form(key="payment_form"):
-    st.markdown(f"Get Premium for unlimited trials and reports ($5/month ≈ ₹{inr_price}/month).", unsafe_allow_html=True)
+    st.markdown(f'<div class="payment-form">Get Premium for unlimited trials and reports ($5/month ≈ ₹{inr_price}/month).</div>', unsafe_allow_html=True)
     user_email = st.text_input("Enter Your Email for Premium Access", value=st.session_state.get("user_email", ""), key="email_input")
     submitted = st.form_submit_button(f"Upgrade to Premium ($5/month ≈ ₹{inr_price}/month)", type="secondary")
 
@@ -369,7 +376,7 @@ else:
             )
             st.plotly_chart(fig, use_container_width=True)
             if trial_count <= 50 and not st.session_state.get("razorpay_payment_id"):
-                st.info(f"Love 3D visualizations? Upgrade to Premium for unlimited trials and downloadable reports ($5/month ≈ ₹{inr_price}/month).")
+                st.info("Love 3D visualizations? Upgrade to Premium for unlimited trials and downloadable reports.")
             st.markdown("<h3 style='color: #4CAF50;'>Download Report</h3>", unsafe_allow_html=True)
             report = (f"ADSG Visualization Tool Report\n\nInputs: {number1}, {number2}\n"
                       f"SSC Result: {results['ssc_result']}\n\nMetrics:\n"
@@ -384,7 +391,7 @@ else:
                 key="download_button"
             )
         else:
-            st.info(f"3D visualizations and reports require a Premium subscription ($5/month ≈ ₹{inr_price}/month) after 50 trials.")
+            st.info("3D visualizations and reports require a Premium subscription after 50 trials.")
 
 # Handle payment success
 if st.query_params.get("payment_id"):
