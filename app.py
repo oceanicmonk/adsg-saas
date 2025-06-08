@@ -8,6 +8,9 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import razorpay  # Install: pip install razorpay
 
+# Set page configuration
+st.set_page_config(page_title="ADSG Visualization Tool", layout="wide", initial_sidebar_state="collapsed")
+
 # Trial Tracking
 def track_trial():
     current_month = datetime.now().strftime("%Y-%m")
@@ -147,7 +150,6 @@ def compute_sfd(ssg, root):
     return math.log(vr / vr2) / math.log(2) if vr2 > 0 else 0
 
 # Streamlit Interface
-st.set_page_config(page_title="ADSG Visualization Tool", layout="wide", initial_sidebar_state="collapsed")
 st.title("ADSG Visualization Tool 📈")
 st.markdown("""
     **Welcome to the ADSG Visualization Tool!**  
@@ -155,25 +157,39 @@ st.markdown("""
     - Free users get 100 trials/month with 2D, 3D visualizations, and reports.  
     - Premium users ($5/month or ₹420/month) get unlimited trials with enhanced features.  
     Try it now with the inputs below!
-""", unsafe_allow_html=False)
+""", unsafe_allow_html=True)
 
+# Input fields
 number1 = st.number_input("First Number", value=7, step=1, min_value=1)
 number2 = st.number_input("Second Number", value=20058, step=1, min_value=1)
 
+# Trial tracking
 trial_count = track_trial()
-st.session_state["trial_count"] = trial_count  # Store trial count in session
-st.write(f"Trials this month: {st.session_state['trial_count']}/100")
+st.session_state["trial_count"] = trial_count
+st.write(f"Trials this month: {trial_count}/100")
 
 # Razorpay Integration
-if trial_count > 100:
-    st.error("You've reached your free trial limit of 100 this month.")
-    if "razorpay_client" not in st.session_state:
-        # Replace with your live Razorpay API keys from dashboard.razorpay.com
-        st.session_state["razorpay_client"] = razorpay.Client(auth=("rzp_test_123456789", "rzp_test_abcdef123456"))  # Use test keys
-    user_email = st.session_state.get("user_email", st.text_input("Enter Your Email for Premium Access", value=""))
-    if user_email:
-        st.session_state["user_email"] = user_email
-    if st.button("Upgrade to Premium ($5/month or ₹420/month)"):
+if "razorpay_client" not in st.session_state:
+    # Use environment variables for API keys (secure for live mode)
+    key_id = os.environ.get("RAZORPAY_KEY_ID", "rzp_test_123456789")
+    key_secret = os.environ.get("RAZORPAY_KEY_SECRET", "rzp_test_abcdef123456")
+    st.session_state["razorpay_client"] = razorpay.Client(auth=(key_id, key_secret))
+
+# Show premium option even before trial limit to demonstrate payment intent
+st.markdown("**Want unlimited access?** Upgrade to Premium ($5/₹420 monthly) for unlimited trials and enhanced features!", unsafe_allow_html=True)
+user_email = st.session_state.get("user_email", st.text_input("Enter Your Email for Premium Access", value="", key="email_input"))
+if user_email:
+    st.session_state["user_email"] = user_email
+
+if trial_count > 100 and not st.session_state.get("razorpay_payment_id"):
+    st.error("You've reached your free trial limit of 100 this month. Upgrade to Premium to continue.")
+else:
+    st.button("Upgrade to Premium ($5/month or ₹420/month)", key="upgrade_button")
+
+if st.button("Upgrade to Premium ($5/month or ₹420/month)", key="upgrade_button_action"):
+    if not user_email:
+        st.error("Please enter your email to proceed with payment.")
+    else:
         try:
             order = st.session_state["razorpay_client"].order.create({
                 "amount": 42000,  # ₹420 in paise
@@ -186,7 +202,7 @@ if trial_count > 100:
                 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
                 <script>
                 var options = {{
-                    "key": "rzp_test_123456789",  // Replace with your test key
+                    "key": "{key_id}",
                     "amount": "42000",
                     "currency": "INR",
                     "name": "ADSG Visualization Tool",
@@ -204,13 +220,14 @@ if trial_count > 100:
                 <p>Redirecting after payment...</p>
             """, height=400)
         except Exception as e:
-            st.error(f"Payment setup failed: {e}. Please ensure Razorpay keys are correct.")
+            st.error(f"Payment setup failed: {e}. Please ensure Razorpay keys are correct or try again.")
 
+# Handle payment success
 if st.query_params.get("payment_id"):
     payment_id = st.query_params["payment_id"][0]
     st.session_state["razorpay_payment_id"] = payment_id
     st.session_state["user_email"] = st.session_state.get("user_email", "anonymous")
-    # Update usage.log for the user
+    # Reset trial count for the user
     current_month = datetime.now().strftime("%Y-%m")
     log_file = "usage.log"
     user_key = f"{current_month}:{st.session_state.get('user_email', payment_id)}"
@@ -223,9 +240,10 @@ if st.query_params.get("payment_id"):
                     f.write(f"{user_key}:0\n")
                 else:
                     f.write(line)
-    st.session_state["trial_count"] = 0  # Reset trial count
+    st.session_state["trial_count"] = 0
     st.success(f"Payment successful! Premium access unlocked with Payment ID: {payment_id}")
 
+# SSC Generation and Visualization
 if st.button("Generate"):
     ops = ["GCD", "LCM"]
     ssc_result, gcd_result = generate_ssc(number1, number2, ops)
