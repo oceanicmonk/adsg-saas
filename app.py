@@ -201,7 +201,7 @@ st.markdown("""
     **Welcome to the ADSG Visualization Tool!**  
     This application generates Symbolic Shape Graphs (SSG) from two numbers using GCD and LCM operations.  
     - Free users get 50 trials/month with 2D and 3D visualizations.  
-    - Premium users ($5/month or ₹420/month) get unlimited trials with 3D visualizations and reports.  
+    - Premium users ($5/month ) get unlimited trials with 3D visualizations and reports.  
     Try it now with the inputs below!
 """, unsafe_allow_html=True)
 
@@ -226,10 +226,10 @@ if "razorpay_client" not in st.session_state:
 
 # Payment form
 with st.form(key="payment_form"):
-    st.info("Unlock Unlimited Trials & Reports for Just $5/₹420 Monthly!")
-    st.markdown("**Want unlimited access?** Upgrade to Premium ($5/month or ₹420/month) for unlimited trials and enhanced features!", unsafe_allow_html=True)
+    st.info("Unlock Unlimited Trials & Reports for Just $5 Monthly!")
+    st.markdown("**Want unlimited access?** Upgrade to Premium ($5/month) for unlimited trials and enhanced features!", unsafe_allow_html=True)
     user_email = st.text_input("Enter Your Email for Premium Access", value=st.session_state.get("user_email", ""), key="email_input")
-    submitted = st.form_submit_button("Upgrade to Premium ($5/month or ₹420/month)", type="secondary")
+    submitted = st.form_submit_button("Upgrade to Premium ($5/month)", type="secondary")
 
 if submitted:
     if not user_email:
