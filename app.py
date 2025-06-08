@@ -170,57 +170,57 @@ st.write(f"Trials this month: {trial_count}/100")
 
 # Razorpay Integration
 if "razorpay_client" not in st.session_state:
-    # Use environment variables for API keys (secure for live mode)
     key_id = os.environ.get("RAZORPAY_KEY_ID", "rzp_test_123456789")
     key_secret = os.environ.get("RAZORPAY_KEY_SECRET", "rzp_test_abcdef123456")
     st.session_state["razorpay_client"] = razorpay.Client(auth=(key_id, key_secret))
 
-# Show premium option even before trial limit to demonstrate payment intent
+# Show premium option to demonstrate payment intent
 st.markdown("**Want unlimited access?** Upgrade to Premium ($5/₹420 monthly) for unlimited trials and enhanced features!", unsafe_allow_html=True)
-user_email = st.session_state.get("user_email", st.text_input("Enter Your Email for Premium Access", value="", key="email_input"))
+if "user_email" not in st.session_state:
+    st.session_state["user_email"] = ""
+user_email = st.text_input("Enter Your Email for Premium Access", value=st.session_state["user_email"], key="email_input")
 if user_email:
     st.session_state["user_email"] = user_email
 
 if trial_count > 100 and not st.session_state.get("razorpay_payment_id"):
     st.error("You've reached your free trial limit of 100 this month. Upgrade to Premium to continue.")
-else:
-    st.button("Upgrade to Premium ($5/month or ₹420/month)", key="upgrade_button")
-
-if st.button("Upgrade to Premium ($5/month or ₹420/month)", key="upgrade_button_action"):
-    if not user_email:
-        st.error("Please enter your email to proceed with payment.")
-    else:
-        try:
-            order = st.session_state["razorpay_client"].order.create({
-                "amount": 42000,  # ₹420 in paise
-                "currency": "INR",
-                "receipt": f"adsg_{trial_count}_{user_email}",
-                "payment_capture": 1
-            })
-            st.session_state["order_id"] = order["id"]
-            st.components.v1.html(f"""
-                <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-                <script>
-                var options = {{
-                    "key": "{key_id}",
-                    "amount": "42000",
+    if st.button("Upgrade to Premium ($5/month or ₹420/month)", key="upgrade_button"):
+        if not user_email:
+            st.error("Please enter a valid email to proceed with payment.")
+        else:
+            try:
+                order = st.session_state["razorpay_client"].order.create({
+                    "amount": 42000,  # ₹420 in paise
                     "currency": "INR",
-                    "name": "ADSG Visualization Tool",
-                    "description": "Premium Subscription",
-                    "order_id": "{order['id']}",
-                    "handler": function (response) {{
-                        window.location.href = window.location.href + "?payment_id=" + response.razorpay_payment_id;
-                    }},
-                    "prefill": {{"name": "User", "email": "{user_email}", "contact": "9999999999"}},
-                    "theme": {{"color": "#4CAF50"}}
-                }};
-                var rzp = new Razorpay(options);
-                rzp.open();
-                </script>
-                <p>Redirecting after payment...</p>
-            """, height=400)
-        except Exception as e:
-            st.error(f"Payment setup failed: {e}. Please ensure Razorpay keys are correct or try again.")
+                    "receipt": f"adsg_{trial_count}_{user_email}",
+                    "payment_capture": 1
+                })
+                st.session_state["order_id"] = order["id"]
+                st.components.v1.html(f"""
+                    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+                    <script>
+                    var options = {{
+                        "key": "{key_id}",
+                        "amount": "42000",
+                        "currency": "INR",
+                        "name": "ADSG Visualization Tool",
+                        "description": "Premium Subscription",
+                        "order_id": "{order['id']}",
+                        "handler": function (response) {{
+                            window.location.href = window.location.href + "?payment_id=" + response.razorpay_payment_id;
+                        }},
+                        "prefill": {{"name": "User", "email": "{user_email}", "contact": "9999999999"}},
+                        "theme": {{"color": "#4CAF50"}}
+                    }};
+                    var rzp = new Razorpay(options);
+                    rzp.open();
+                    </script>
+                    <p>Redirecting after payment...</p>
+                """, height=400)
+            except Exception as e:
+                st.error(f"Payment setup failed: {e}. Please ensure a stable internet connection or try again.")
+else:
+    st.button("Upgrade to Premium ($5/month or ₹420/month)", key="upgrade_button", disabled=False)
 
 # Handle payment success
 if st.query_params.get("payment_id"):
