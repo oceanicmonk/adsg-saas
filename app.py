@@ -28,24 +28,24 @@ st.markdown("""
         background-color: #00e66b;
     }
     /* Upgrade to Premium button: Vibrant royal blue */
-    div.stButton > button[kind="secondary"] {
+    div.stButton > button[key="upgrade_button"] {
         background-color: #1e90ff;
         color: white;
         border-radius: 5px;
         padding: 10px 20px;
         font-weight: bold;
     }
-    div.stButton > button[kind="secondary"]:hover {
+    div.stButton > button[key="upgrade_button"]:hover {
         background-color: #1a7de6;
     }
     /* Other buttons (Download Report): Gray */
-    div.stButton > button:not([kind="primary"]):not([kind="secondary"]) {
+    div.stButton > button:not([kind="primary"]):not([key="upgrade_button"]) {
         background-color: #6c757d;
         color: white;
         border-radius: 5px;
         padding: 10px 20px;
     }
-    div.stButton > button:not([kind="primary"]):not([kind="secondary"]):hover {
+    div.stButton > button:not([kind="primary"]):not([key="upgrade_button"]):hover {
         background-color: #5a6268;
     }
     /* Shorten number input bars */
@@ -225,10 +225,14 @@ if "razorpay_client" not in st.session_state:
 # Payment form
 with st.form(key="payment_form"):
     st.markdown("**Want unlimited access?** Upgrade to Premium ($5/month or ₹420/month) for unlimited trials and enhanced features!", unsafe_allow_html=True)
-    user_email = st.text_input("Enter Your Email for Premium Access", value=st.session_state.get("user_email", ""), key="email_input")
-    submitted = st.form_submit_button("Upgrade to Premium ($5/month or ₹420/month)", type="secondary")
+    if "user_email" not in st.session_state:
+        st.session_state["user_email"] = ""
+    user_email = st.text_input("Enter Your Email for Premium Access", value=st.session_state["user_email"], key="email_input")
+    if user_email:
+        st.session_state["user_email"] = user_email
+    upgrade_button = st.form_submit_button("Upgrade to Premium ($5/month or ₹420/month)", disabled=False, key="upgrade_button")
 
-if submitted:
+if upgrade_button:
     if not user_email:
         st.error("Please enter a valid email to proceed with payment.")
     else:
@@ -261,7 +265,6 @@ if submitted:
                 </script>
                 <p>Redirecting after payment...</p>
             """, height=400)
-            st.session_state["user_email"] = user_email
         except Exception as e:
             st.error(f"Payment setup failed: {e}. Please ensure a stable internet connection or try again.")
 
