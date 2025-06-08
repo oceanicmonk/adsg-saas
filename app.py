@@ -11,6 +11,44 @@ import razorpay  # Install: pip install razorpay
 # Set page configuration
 st.set_page_config(page_title="ADSG Visualization Tool", layout="wide", initial_sidebar_state="collapsed")
 
+# Custom CSS for button styling
+st.markdown("""
+    <style>
+    /* Generate button: Green */
+    div.stButton > button[kind="primary"] {
+        background-color: #28a745;
+        color: white;
+        border-radius: 5px;
+        padding: 10px 20px;
+        font-weight: bold;
+    }
+    div.stButton > button[kind="primary"]:hover {
+        background-color: #218838;
+    }
+    /* Upgrade to Premium button: Blue */
+    div.stButton > button[key="upgrade_button"] {
+        background-color: #007bff;
+        color: white;
+        border-radius: 5px;
+        padding: 10px 20px;
+        font-weight: bold;
+    }
+    div.stButton > button[key="upgrade_button"]:hover {
+        background-color: #0056b3;
+    }
+    /* Other buttons (3D Visualization, Download Report): Default gray */
+    div.stButton > button:not([kind="primary"]):not([key="upgrade_button"]) {
+        background-color: #6c757d;
+        color: white;
+        border-radius: 5px;
+        padding: 10px 20px;
+    }
+    div.stButton > button:not([kind="primary"]):not([key="upgrade_button"]):hover {
+        background-color: #5a6268;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 # Trial Tracking
 def track_trial():
     current_month = datetime.now().strftime("%Y-%m")
@@ -244,7 +282,7 @@ if st.query_params.get("payment_id"):
     st.success(f"Payment successful! Premium access unlocked with Payment ID: {payment_id}")
 
 # SSC Generation and Visualization
-if st.button("Generate"):
+if st.button("Generate", key="generate_button"):
     ops = ["GCD", "LCM"]
     ssc_result, gcd_result = generate_ssc(number1, number2, ops)
     if ssc_result is not None and gcd_result is not None:
@@ -268,6 +306,7 @@ if st.button("Generate"):
         st.write(f"Structural Complexity Index (SCI): {sci:.3f}")
         st.write(f"Graph Dispersion Index (GDI): {gdi:.3f}")
         st.write(f"Symbolic Fractal Dimension (SFD): {sfd:.3f}")
+        # 2D Visualization
         G = nx.Graph()
         G.add_nodes_from(vertices)
         G.add_edges_from(edges)
@@ -289,9 +328,15 @@ if st.button("Generate"):
                 go.Scatter3d(x=x, y=y, z=z, mode='markers+text', text=vertices,
                              marker=dict(size=12, color='#2196F3', opacity=0.8))
             ])
-            fig.update_layout(title="3D SSG Visualization", scene=dict(xaxis_title='X', yaxis_title='Y', zaxis_title='Z'),
-                              paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
-            st.plotly_chart(fig)
+            fig.update_layout(
+                title="3D SSG Visualization",
+                scene=dict(xaxis_title='X', yaxis_title='Y', zaxis_title='Z'),
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)',
+                width=800,  # Match 2D size
+                height=600
+            )
+            st.plotly_chart(fig, use_container_width=True)
             st.markdown("<h3 style='color: #4CAF50;'>Download Report</h3>", unsafe_allow_html=True)
             report = f"ADSG Visualization Tool Report\n\nInputs: {number1}, {number2}\nSSC Result: {ssc_result}\n\nMetrics:\n- Betti Numbers: β0 = {beta_0}, β1 = {beta_1}\n- Euler Characteristic: {euler_char}\n- SCI: {sci:.3f}\n- GDI: {gdi:.3f}\n- SFD: {sfd:.3f}"
             st.download_button(
