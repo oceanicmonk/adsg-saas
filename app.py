@@ -171,17 +171,17 @@ def compute_sfd(ssg, root):
         dist = {v: float('inf') for v in ssg.V}
         dist[root] = 0
         queue = deque([root])
-        nodes = set()
+        nodes = []
         while queue:
             u = queue.popleft()
             if dist[u] <= r:
-                nodes.add(u)
+                nodes.append(u)
             for v in ssg.adj[u]:
                 if dist[v] == float('inf'):
                     dist[v] = dist[u] + 1
                     queue.append(v)
         return len(nodes)
-    max_r = max(bfs(ssg, root).values(), default=0)
+    max_r = max((d for d in bfs(ssg, root).values() if d != float('inf')), default=0)
     if max_r == 0:
         return 0
     r = max_r
@@ -194,21 +194,21 @@ st.title("ADSG Visualization Tool 📈")
 st.markdown("""
     **Welcome to the ADSG Visualization Tool!**  
     This application generates Symbolic Shape Graphs (SSG) from two numbers using GCD and LCM operations.  
-    - Free users get 100 trials/month with 2D and 3D visualizations.  
-    - Premium users ($5/month or ₹420/month) get unlimited trials with 3D visualizations and reports.  
+    - Free users get 50 trials/month with 2D and 3D visualizations.  
+    - Premium users ($5/month or ₹250/month) get unlimited trials with 3D visualizations and reports.  
     Try it now with the inputs below!
 """, unsafe_allow_html=True)
 
 # Input fields
-number1 = st.number_input("First Number", value=7, step=1, min_value=1)
-number2 = st.number_input("Second Number", value=20058, step=1, min_value=1)
+number1 = st.number_input("First Number", value=7, min_value=1, step=1)
+number2 = st.number_input("Second Number", value=20058, min_value=1, step=1)
 
 # Trial tracking
 trial_count = track_trial()
 st.session_state["trial_count"] = trial_count
-st.write(f"Trials this month: {trial_count}/100")
+st.write(f"Trials this month: {trial_count}/50")
 
-# Initialize session state for results
+# Initialize session state
 if "results" not in st.session_state:
     st.session_state["results"] = None
 
@@ -218,15 +218,15 @@ if "razorpay_client" not in st.session_state:
     key_secret = os.environ.get("RAZORPAY_KEY_SECRET", "rzp_test_abcdef123456")
     st.session_state["razorpay_client"] = razorpay.Client(auth=(key_id, key_secret))
 
-# Payment form to prevent rerun
+# Payment form
 with st.form(key="payment_form"):
-    st.markdown("**Want unlimited access?** Upgrade to Premium ($5/₹420 monthly) for unlimited trials and enhanced features!", unsafe_allow_html=True)
+    st.markdown("**Want unlimited access?** Upgrade to Premium ($5/month or ₹250/month) for unlimited trials and enhanced features!", unsafe_allow_html=True)
     if "user_email" not in st.session_state:
         st.session_state["user_email"] = ""
-    user_email = st.text_input("Enter Your Email for Premium Access", value=st.session_state["user_email"], key="email_input")
+    user_email = st.text_input("Enter your email for Premium Access", value=st.session_state["user_email"], key="email_input")
     if user_email:
         st.session_state["user_email"] = user_email
-    upgrade_button = st.form_submit_button("Upgrade to Premium ($5/month or ₹420/month)", disabled=False)
+    upgrade_button = st.form_submit_button("Upgrade to Premium ($5/month or ₹250/month)", disabled=False)
 
 if upgrade_button:
     if not user_email:
@@ -234,7 +234,7 @@ if upgrade_button:
     else:
         try:
             order = st.session_state["razorpay_client"].order.create({
-                "amount": 42000,  # ₹420 in paise
+                "amount": 2500000,  # ₹250 in paise
                 "currency": "INR",
                 "receipt": f"adsg_{trial_count}_{user_email}",
                 "payment_capture": 1
@@ -245,7 +245,7 @@ if upgrade_button:
                 <script>
                 var options = {{
                     "key": "{key_id}",
-                    "amount": "42000",
+                    "amount": "2500000",
                     "currency": "INR",
                     "name": "ADSG Visualization Tool",
                     "description": "Premium Subscription",
@@ -253,7 +253,7 @@ if upgrade_button:
                     "handler": function (response) {{
                         window.location.href = window.location.href + "?payment_id=" + response.razorpay_payment_id;
                     }},
-                    "prefill": {{"name": "User", "email": "{user_email}", "contact": "9999999999"}},
+                    "prefill": {{"name": "", "email": "{user_email}", "contact": "9999999999"}},
                     "theme": {{"color": "#4CAF50"}}
                 }};
                 var rzp = new Razorpay(options);
@@ -262,15 +262,15 @@ if upgrade_button:
                 <p>Redirecting after payment...</p>
             """, height=400)
         except Exception as e:
-            st.error(f"Payment setup failed: {e}. Please ensure a stable internet connection or try again.")
+            st.error(f"Error during payment setup: {e}. Please ensure a stable internet connection or try again.")
 
 # Check trial limit before generation
-if trial_count > 100 and not st.session_state.get("razorpay_payment_id"):
-    st.error("You've reached your free trial limit of 100 this month. Upgrade to Premium to continue.")
+if trial_count > 50 and not st.session_state.get("razorpay_payment_id"):
+    st.error("You've reached your free trial limit of 50 trials this month. Upgrade to premium to continue.")
 else:
     # SSC Generation and Visualization
-    if st.button("Generate", key="generate_button"):
-        ops = ["GCD", "LCM"]
+    if st.button("Generate", key="generate", type="primary"):
+        ops = ["GCD"]
         ssc_result, gcd_result = generate_ssc(number1, number2, ops)
         if ssc_result is not None and gcd_result is not None:
             results = {
@@ -280,34 +280,38 @@ else:
                 "edges": []
             }
             if number1 != gcd_result:
-                results["edges"].append((number1, gcd_result))
+                results Kite number1, gcd_result
             if number2 != gcd_result:
                 results["edges"].append((number2, gcd_result))
             if gcd_result != ssc_result:
                 results["edges"].append((gcd_result, ssc_result))
             ssg = SSG(results["vertices"], results["edges"])
             beta_0, beta_1 = compute_betti_numbers(ssg)
-            euler_char = compute_euler_characteristic(ssg)
-            sci = compute_sci(ssg, root=gcd_result)
+            euler_char = compute_euler(ssg)
+            sci = compute_sci(ssg, gcd_result)
             gdi = compute_gdi(ssg)
-            sfd = compute_sfd(ssg, root=gcd_result)
+            sfd = compute_sfd(ssg, gcd_result)
             results.update({
-                "beta_0": beta_0, "beta_1": beta_1, "euler_char": euler_char,
-                "sci": sci, "gdi": gdi, "sfd": sfd
+                "beta_0": beta_0,
+                "beta_1": beta_1,
+                "euler_char": euler_char,
+                "sci": sci,
+                "gdi": gdi,
+                "sfd": sfd
             })
             st.session_state["results"] = results
         else:
-            st.error("Error generating SSC. Check inputs or operations.")
+            st.error("Error generating SSC. Check inputs or try again.")
 
     # Display results if available
     if st.session_state.get("results"):
         results = st.session_state["results"]
-        st.write(f"SSC Result: {results['ssc_result']}")
-        st.write(f"Betti Numbers: β0 = {results['beta_0']}, β1 = {results['beta_1']}")
-        st.write(f"Euler Characteristic: {results['euler_char']}")
-        st.write(f"Structural Complexity Index (SCI): {results['sci']:.3f}")
-        st.write(f"Graph Dispersion Index (GDI): {results['gdi']:.3f}")
-        st.write(f"Symbolic Fractal Dimension (SFD): {results['sfd']:.3f}")
+        st.write(f" "**SSC Result**: {results['ssc_result']}")
+        st.write(f"**Betti Numbers**: β0={results['beta_0']}, β1={results.get['beta_1']}")
+        st.write(f"**Euler Characteristic**: {results.get['euler_char']}")
+        st.write(f"**Structural Complexity Index (SCI)**: {results['sci']:.3f}")
+        st.write(f"**Graph Dispersion Index (GDI)**: {results['gdi']:.3f}")
+        st.write(f"**Symbolic (SFD)**: {results['sfd']:.3f}")
         # 2D Visualization
         st.markdown("<h3 style='color: #4CAF50;'>2D Visualization</h3>", unsafe_allow_html=True)
         G = nx.Graph()
@@ -320,8 +324,8 @@ else:
         nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_size=8)
         st.pyplot(plt)
         plt.close()  # Close figure to prevent memory leak
-        # 3D Visualization (available for trial_count <= 100 or premium)
-        if trial_count <= 100 or st.session_state.get("razorpay_payment_id"):
+        # 3D Visualization (available for trial_count <= 50 or premium)
+        if trial_count <= 50 or st.session_state.get("razorpay_payment_id"):
             st.success("Enhanced Access: 3D Visualization and Report available!")
             st.markdown("<h3 style='color: #4CAF50;'>3D Visualization</h3>", unsafe_allow_html=True)
             pos_3d = nx.spring_layout(G, dim=3, seed=42)
@@ -340,10 +344,12 @@ else:
                 width=800, height=600
             )
             st.plotly_chart(fig, use_container_width=True)
+            if trial_count <= 50 and not st.session_state.get("razorpay_payment_id"):
+                st.info("Love 3D visualizations? Upgrade to Premium for unlimited trials and downloadable reports!")
             st.markdown("<h3 style='color: #4CAF50;'>Download Report</h3>", unsafe_allow_html=True)
             report = (f"ADSG Visualization Tool Report\n\nInputs: {number1}, {number2}\n"
                       f"SSC Result: {results['ssc_result']}\n\nMetrics:\n"
-                      f"- Betti Numbers: β0 = {results['beta_0']}, β1 = {results['beta_1']}\n"
+                      f"- Betti Numbers: β0={results['beta_0']}, β1={results['beta_1']}\n"
                       f"- Euler Characteristic: {results['euler_char']}\n"
                       f"- SCI: {results['sci']:.3f}\n- GDI: {results['gdi']:.3f}\n- SFD: {results['sfd']:.3f}")
             st.download_button(
@@ -354,7 +360,7 @@ else:
                 key="download_button"
             )
         else:
-            st.info("3D Visualization and Report require a premium subscription after 100 trials. Click 'Upgrade to Premium' to proceed.")
+            st.info("3D Visualization and Report require a premium subscription after 50 trials. Click 'Upgrade to Premium' to proceed.")
 
 # Handle payment success
 if st.query_params.get("payment_id"):
