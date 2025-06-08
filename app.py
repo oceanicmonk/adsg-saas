@@ -28,24 +28,24 @@ st.markdown("""
         background-color: #00e66b;
     }
     /* Upgrade to Premium button: Vibrant royal blue */
-    div.stButton > button[key="upgrade_button"] {
+    div.stButton > button[kind="secondary"] {
         background-color: #1e90ff;
         color: white;
         border-radius: 5px;
         padding: 10px 20px;
         font-weight: bold;
     }
-    div.stButton > button[key="upgrade_button"]:hover {
+    div.stButton > button[kind="secondary"]:hover {
         background-color: #1a7de6;
     }
     /* Other buttons (Download Report): Gray */
-    div.stButton > button:not([kind="primary"]):not([key="upgrade_button"]) {
+    div.stButton > button:not([kind="primary"]):not([kind="secondary"]) {
         background-color: #6c757d;
         color: white;
         border-radius: 5px;
         padding: 10px 20px;
     }
-    div.stButton > button:not([kind="primary"]):not([key="upgrade_button"]):hover {
+    div.stButton > button:not([kind="primary"]):not([kind="secondary"]):hover {
         background-color: #5a6268;
     }
     /* Shorten number input bars */
@@ -215,6 +215,8 @@ st.write(f"Trials this month: {trial_count}/50")
 # Initialize session state
 if "results" not in st.session_state:
     st.session_state["results"] = None
+if "user_email" not in st.session_state:
+    st.session_state["user_email"] = ""
 
 # Razorpay Integration
 if "razorpay_client" not in st.session_state:
@@ -225,17 +227,14 @@ if "razorpay_client" not in st.session_state:
 # Payment form
 with st.form(key="payment_form"):
     st.markdown("**Want unlimited access?** Upgrade to Premium ($5/month or ₹420/month) for unlimited trials and enhanced features!", unsafe_allow_html=True)
-    if "user_email" not in st.session_state:
-        st.session_state["user_email"] = ""
     user_email = st.text_input("Enter Your Email for Premium Access", value=st.session_state["user_email"], key="email_input")
-    if user_email:
-        st.session_state["user_email"] = user_email
-    upgrade_button = st.form_submit_button("Upgrade to Premium ($5/month or ₹420/month)", disabled=False, key="upgrade_button")
+    submitted = st.form_submit_button("Upgrade to Premium ($5/month or ₹420/month)", type="secondary")
 
-if upgrade_button:
+if submitted:
     if not user_email:
         st.error("Please enter a valid email to proceed with payment.")
     else:
+        st.session_state["user_email"] = user_email
         try:
             order = st.session_state["razorpay_client"].order.create({
                 "amount": 42000,  # ₹420 in paise
@@ -356,8 +355,7 @@ else:
                 label="Download Report",
                 data=report,
                 file_name=f"adsg_report_{number1}_{number2}.txt",
-                mime="text/plain",
-                key="download_button"
+                mime="text/plain"
             )
         else:
             st.info("3D Visualization and Report require a premium subscription after 50 trials. Click 'Upgrade to Premium' to proceed.")
