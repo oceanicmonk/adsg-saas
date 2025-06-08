@@ -13,7 +13,7 @@ import razorpay
 # Set page configuration
 st.set_page_config(page_title="ADSG Visualization Tool", layout="wide", initial_sidebar_state="collapsed")
 
-# Custom CSS for vibrant buttons and wider input bars
+# Custom CSS for vibrant buttons and shortened number input bars
 st.markdown("""
     <style>
     /* Generate button: Vibrant lime green */
@@ -48,9 +48,9 @@ st.markdown("""
     div.stButton > button:not([kind="primary"]):not([key="upgrade_button"]):hover {
         background-color: #5a6268;
     }
-    /* Widen input bars */
-    .stTextInput input {
-        width: 20rem !important;
+    /* Shorten number input bars */
+    .stNumberInput input {
+        width: 15rem !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -203,20 +203,9 @@ st.markdown("""
     Try it now with the inputs below!
 """, unsafe_allow_html=True)
 
-# Input fields with text_input to handle large numbers
-number1_str = st.text_input("First Number", value="7")
-number2_str = st.text_input("Second Number", value="20058")
-
-# Validate inputs
-try:
-    number1 = int(number1_str)
-    number2 = int(number2_str)
-    if number1 <= 0 or number2 <= 0:
-        st.error("Please enter positive integers greater than 0.")
-        number1, number2 = None, None
-except ValueError:
-    st.error("Please enter valid integers.")
-    number1, number2 = None, None
+# Input fields
+number1 = st.number_input("First Number", value=7, min_value=1, step=1)
+number2 = st.number_input("Second Number", value=20058, min_value=1, step=1)
 
 # Trial tracking
 trial_count = track_trial()
@@ -282,8 +271,6 @@ if upgrade_button:
 # Check trial limit before generation
 if trial_count > 50 and not st.session_state.get("razorpay_payment_id"):
     st.error("You've reached your free trial limit of 50 this month. Upgrade to Premium to continue.")
-elif number1 is None or number2 is None:
-    st.warning("Please correct the input errors before generating.")
 else:
     # SSC Generation and Visualization
     if st.button("Generate", key="generate_button", type="primary"):
