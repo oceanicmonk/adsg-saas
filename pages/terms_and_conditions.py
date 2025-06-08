@@ -25,7 +25,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.markdown("""
+st.markdown(f"""
     <div class="content">
     <h1>Terms and Conditions</h1>
     <p>Last updated: June 08, 2025</p>
@@ -34,10 +34,10 @@ st.markdown("""
     <p>By accessing or using the ADSG Visualization Tool ("Service") provided by Serene Glade, you agree to be bound by these Terms and Conditions ("Terms"). If you do not agree, please do not use the Service.</p>
     
     <h2>2. Service Description</h2>
-    <p>The Service generates Symbolic Shape Graphs (SSG) using GCD and LCM operations. Free users receive 50 trials/month with 2D and 3D visualizations. Premium users ($5/month ≈ ₹420/month) receive unlimited trials and downloadable reports.</p>
+    <p>The Service generates Symbolic Shape Graphs (SSG) using GCD and LCM operations. Free users receive 50 trials/month with 2D and 3D visualizations. Premium users ($5/month ≈ ₹{st.session_state.get('inr_price', 420)}/month) receive unlimited trials and downloadable reports.</p>
     
     <h2>3. Payments</h2>
-    <p>Premium subscriptions are processed via Razorpay. The subscription fee is $5/month (approximately ₹420/month, subject to exchange rates). All payments are non-refundable unless required by law.</p>
+    <p>Premium subscriptions are processed via Razorpay. The subscription fee is $5/month (approximately ₹{st.session_state.get('inr_price', 420)}/month, subject to exchange rates). Refunds and cancellations are governed by our <a href="/refund_policy" target="_self">Refund and Cancellation Policy</a>.</p>
     
     <h2>4. User Responsibilities</h2>
     <p>You must provide accurate information during registration and payment. You agree not to misuse the Service or attempt to circumvent trial limits.</p>

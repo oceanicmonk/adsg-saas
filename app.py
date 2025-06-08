@@ -5,18 +5,31 @@ from datetime import datetime
 from collections import defaultdict, deque
 import math
 import matplotlib
-matplotlib.use('Agg')  # Force non-interactive backend
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import networkx as nx
 import razorpay
+import requests
 
 # Set page configuration
 st.set_page_config(page_title="ADSG Visualization Tool", layout="wide", initial_sidebar_state="collapsed")
 
-# Custom CSS for vibrant buttons, shortened input bars, and footer
+# Currency converter
+def get_inr_amount(usd_amount):
+    try:
+        api_key = os.environ.get("EXCHANGE_RATE_API_KEY", "your_exchangerate_api_key")  # Replace with your key
+        response = requests.get(f"https://api.exchangerate-api.com/v4/latest/USD?apiKey={api_key}")
+        rate = response.json()["rates"]["INR"]
+        return round(usd_amount * rate)
+    except:
+        return 420  # Fallback to ₹420 if API fails
+
+usd_price = 5
+inr_price = get_inr_amount(usd_price)
+
+# Custom CSS
 st.markdown("""
     <style>
-    /* Generate button: Vibrant lime green */
     div.stButton > button[kind="primary"] {
         background-color: #00ff7f;
         color: black;
@@ -27,7 +40,6 @@ st.markdown("""
     div.stButton > button[kind="primary"]:hover {
         background-color: #00e66b;
     }
-    /* Upgrade to Premium button: Vibrant royal blue */
     div.stButton > button[kind="secondary"] {
         background-color: #1e90ff;
         color: white;
@@ -38,7 +50,6 @@ st.markdown("""
     div.stButton > button[kind="secondary"]:hover {
         background-color: #1a7de6;
     }
-    /* Other buttons (Download Report): Gray */
     div.stButton > button:not([kind="primary"]):not([kind="secondary"]) {
         background-color: #6c757d;
         color: white;
@@ -48,11 +59,9 @@ st.markdown("""
     div.stButton > button:not([kind="primary"]):not([kind="secondary"]):hover {
         background-color: #5a6268;
     }
-    /* Shorten number input bars */
     .stNumberInput input {
         width: 15rem !important;
     }
-    /* Footer styling */
     .footer {
         font-size: 0.875rem;
         color: #666;
@@ -213,11 +222,11 @@ def compute_sfd(ssg, root):
 
 # Streamlit Interface
 st.title("ADSG Visualization Tool 📈")
-st.markdown("""
+st.markdown(f"""
     **Welcome to the ADSG Visualization Tool!**  
     This application generates Symbolic Shape Graphs (SSG) from two numbers using GCD and LCM operations.  
     - Free users get 50 trials/month with 2D and 3D visualizations.  
-    - Upgrade to Premium ($5/month ≈ ₹420/month) for unlimited trials and reports.  
+    - Upgrade to Premium ($5/month ≈ ₹{inr_price}/month) for unlimited trials and reports.  
     Try it now with the inputs below!
 """, unsafe_allow_html=True)
 
@@ -242,9 +251,9 @@ if "razorpay_client" not in st.session_state:
 
 # Payment form
 with st.form(key="payment_form"):
-    st.markdown("Get Premium for unlimited trials and reports ($5/month ≈ ₹420/month).", unsafe_allow_html=True)
+    st.markdown(f"Get Premium for unlimited trials and reports ($5/month ≈ ₹{inr_price}/month).", unsafe_allow_html=True)
     user_email = st.text_input("Enter Your Email for Premium Access", value=st.session_state.get("user_email", ""), key="email_input")
-    submitted = st.form_submit_button("Upgrade to Premium ($5/month ≈ ₹420/month)", type="secondary")
+    submitted = st.form_submit_button(f"Upgrade to Premium ($5/month ≈ ₹{inr_price}/month)", type="secondary")
 
 if submitted:
     if not user_email:
@@ -252,7 +261,7 @@ if submitted:
     else:
         try:
             order = st.session_state["razorpay_client"].order.create({
-                "amount": 42000,  # ₹420 in paise
+                "amount": inr_price * 100,  # INR in paise
                 "currency": "INR",
                 "receipt": f"adsg_{trial_count}_{user_email}",
                 "payment_capture": 1
@@ -263,7 +272,7 @@ if submitted:
                 <script>
                 var options = {{
                     "key": "{key_id}",
-                    "amount": "42000",
+                    "amount": "{inr_price * 100}",
                     "currency": "INR",
                     "name": "Serene Glade",
                     "description": "Premium Subscription",
@@ -360,7 +369,7 @@ else:
             )
             st.plotly_chart(fig, use_container_width=True)
             if trial_count <= 50 and not st.session_state.get("razorpay_payment_id"):
-                st.info("Love 3D visualizations? Upgrade to Premium for unlimited trials and downloadable reports.")
+                st.info(f"Love 3D visualizations? Upgrade to Premium for unlimited trials and downloadable reports ($5/month ≈ ₹{inr_price}/month).")
             st.markdown("<h3 style='color: #4CAF50;'>Download Report</h3>", unsafe_allow_html=True)
             report = (f"ADSG Visualization Tool Report\n\nInputs: {number1}, {number2}\n"
                       f"SSC Result: {results['ssc_result']}\n\nMetrics:\n"
@@ -375,7 +384,7 @@ else:
                 key="download_button"
             )
         else:
-            st.info("3D visualizations and reports require a Premium subscription ($5/month ≈ ₹420/month) after 50 trials.")
+            st.info(f"3D visualizations and reports require a Premium subscription ($5/month ≈ ₹{inr_price}/month) after 50 trials.")
 
 # Handle payment success
 if st.query_params.get("payment_id"):
@@ -402,6 +411,7 @@ st.markdown("""
     <div class="footer">
         <a href="/terms_and_conditions" target="_self">Terms and Conditions</a>
         <a href="/privacy_policy" target="_self">Privacy Policy</a>
+        <a href="/refund_policy" target="_self">Refund Policy</a>
         <a href="/contact" target="_self">Contact</a>
     </div>
 """, unsafe_allow_html=True)
