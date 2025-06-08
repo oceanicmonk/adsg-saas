@@ -13,7 +13,7 @@ import razorpay
 # Set page configuration
 st.set_page_config(page_title="ADSG Visualization Tool", layout="wide", initial_sidebar_state="collapsed")
 
-# Custom CSS for vibrant buttons and shortened number input bars
+# Custom CSS for vibrant buttons, shortened input bars, and footer
 st.markdown("""
     <style>
     /* Generate button: Vibrant lime green */
@@ -52,6 +52,23 @@ st.markdown("""
     .stNumberInput input {
         width: 15rem !important;
     }
+    /* Footer styling */
+    .footer {
+        font-size: 0.875rem;
+        color: #666;
+        text-align: center;
+        margin-top: 2rem;
+        padding: 1rem;
+        border-top: 1px solid #ddd;
+    }
+    .footer a {
+        color: #1e90ff;
+        text-decoration: none;
+        margin: 0 1rem;
+    }
+    .footer a:hover {
+        text-decoration: underline;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -65,7 +82,6 @@ def track_trial():
             with open(log_file, "r") as f:
                 logs = f.readlines()
             user_key = f"{current_month}:{user_id}"
-            # Clean old logs (remove entries from previous months)
             logs = [line for line in logs if current_month in line]
             for i, line in enumerate(logs):
                 if user_key in line:
@@ -201,7 +217,7 @@ st.markdown("""
     **Welcome to the ADSG Visualization Tool!**  
     This application generates Symbolic Shape Graphs (SSG) from two numbers using GCD and LCM operations.  
     - Free users get 50 trials/month with 2D and 3D visualizations.  
-    - Upgrade to Premium ($5/month) for unlimited trials and reports.  
+    - Upgrade to Premium ($5/month ≈ ₹420/month) for unlimited trials and reports.  
     Try it now with the inputs below!
 """, unsafe_allow_html=True)
 
@@ -226,9 +242,9 @@ if "razorpay_client" not in st.session_state:
 
 # Payment form
 with st.form(key="payment_form"):
-    st.markdown("Get Premium for unlimited trials and reports ($5/month).", unsafe_allow_html=True)
+    st.markdown("Get Premium for unlimited trials and reports ($5/month ≈ ₹420/month).", unsafe_allow_html=True)
     user_email = st.text_input("Enter Your Email for Premium Access", value=st.session_state.get("user_email", ""), key="email_input")
-    submitted = st.form_submit_button("Upgrade to Premium ($5/month)", type="secondary")
+    submitted = st.form_submit_button("Upgrade to Premium ($5/month ≈ ₹420/month)", type="secondary")
 
 if submitted:
     if not user_email:
@@ -249,7 +265,7 @@ if submitted:
                     "key": "{key_id}",
                     "amount": "42000",
                     "currency": "INR",
-                    "name": "ADSG Visualization Tool",
+                    "name": "Serene Glade",
                     "description": "Premium Subscription",
                     "order_id": "{order['id']}",
                     "handler": function (response) {{
@@ -322,8 +338,8 @@ else:
         edge_labels = {(u, v): "GCD" if v == results["gcd_result"] else "LCM" for u, v in results["edges"]}
         nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_size=8)
         st.pyplot(plt)
-        plt.close()  # Close figure to prevent memory leak
-        # 3D Visualization (available for trial_count <= 50 or premium)
+        plt.close()
+        # 3D Visualization
         if trial_count <= 50 or st.session_state.get("razorpay_payment_id"):
             st.success("Enhanced Access: 3D Visualization and Report available!")
             st.markdown("<h3 style='color: #4CAF50;'>3D Visualization</h3>", unsafe_allow_html=True)
@@ -359,14 +375,13 @@ else:
                 key="download_button"
             )
         else:
-            st.info("3D visualizations and reports require a Premium subscription ($5/month) after 50 trials.")
+            st.info("3D visualizations and reports require a Premium subscription ($5/month ≈ ₹420/month) after 50 trials.")
 
 # Handle payment success
 if st.query_params.get("payment_id"):
     payment_id = st.query_params["payment_id"][0]
     st.session_state["razorpay_payment_id"] = payment_id
     st.session_state["user_email"] = st.session_state.get("user_email", "anonymous")
-    # Reset trial count
     current_month = datetime.now().strftime("%Y-%m")
     log_file = "usage.log"
     user_key = f"{current_month}:{st.session_state.get('user_email', payment_id)}"
@@ -381,3 +396,12 @@ if st.query_params.get("payment_id"):
                     f.write(line)
     st.session_state["trial_count"] = 0
     st.success(f"Payment successful! Premium access unlocked with Payment ID: {payment_id}")
+
+# Footer
+st.markdown("""
+    <div class="footer">
+        <a href="/terms_and_conditions" target="_self">Terms and Conditions</a>
+        <a href="/privacy_policy" target="_self">Privacy Policy</a>
+        <a href="/contact" target="_self">Contact</a>
+    </div>
+""", unsafe_allow_html=True)
