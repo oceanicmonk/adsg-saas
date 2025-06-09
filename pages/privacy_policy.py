@@ -31,7 +31,7 @@ st.markdown("""
     <p>Last updated: June 09, 2025</p>
     
     <h2>1. Introduction</h2>
-    <p>Serene Glade ("we," "us," or "our"), located at Ambalaparambil, Kerala-676509, India, operates the ADSG Visualization Tool Suite ("Service") available at <a href="https://adsg-saas-suite.streamlit.app/" target="_blank">https://adsg-saas-suite.streamlit.app/</a>. The Service provides tools for visualizing data through 2D/3D graphs and reports, with payment processing via Razorpay. This Privacy Policy explains how we collect, use, store, and protect your personal information when you use our Service.</p>
+    <p>Serene Glade ("we," "us," or "our"), located at Ambalaparambil, Kerala-676509, India, operates the ADSG Visualization Tool Suite ("Service") available at <a href="https://oceanicmonk-adsg-saas-app-9k92vn.streamlit.app/" target="_blank">https://oceanicmonk-adsg-saas-app-9k92vn.streamlit.app/</a>. The Service provides tools for visualizing data through 2D/3D graphs and reports, with payment processing via Razorpay. This Privacy Policy explains how we collect, use, store, and protect your personal information when you use our Service.</p>
     
     <h2>2. Information We Collect</h2>
     <p>We collect:
