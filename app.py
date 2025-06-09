@@ -251,9 +251,12 @@ if "results" not in st.session_state:
     st.session_state["results"] = None
 
 # Razorpay Integration
+key_id = os.environ.get("RAZORPAY_KEY_ID")
+key_secret = os.environ.get("RAZORPAY_KEY_SECRET")
 if "razorpay_client" not in st.session_state:
-    key_id = os.environ.get("RAZORPAY_KEY_ID", "rzp_live_fxaIHsGE5IZSlu")
-    key_secret = os.environ.get("RAZORPAY_KEY_SECRET", "akcu8pmRep5uAaJPZG4oukbo")
+    if not key_id or not key_secret:
+        st.error("Razorpay configuration is missing. Please contact support.")
+        st.stop()
     st.session_state["razorpay_client"] = razorpay.Client(auth=(key_id, key_secret))
 
 # Payment form
